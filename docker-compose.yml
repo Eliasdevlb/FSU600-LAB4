@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  traefik:
+    image: traefik:v2.4
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80" # The HTTP port
+      - "8080:8080" # Traefik dashboard
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.middlewares.strip-prefix.stripprefix.prefixes=/api"
+      - "traefik.http.middlewares.strip-prefix.stripprefix.forceSlash=false"
+
+  api:
+    build:
+      context: ./API
+      dockerfile: Dockerfile
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=PathPrefix(`/api`)"
+      - "traefik.http.middlewares.api-stripprefix.stripprefix.prefixes=/api"
+      - "traefik.http.routers.api.middlewares=api-stripprefix@docker"
+
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+
+  db:
+    image: "mcr.microsoft.com/mssql/server"
+    environment:
+      SA_PASSWORD: "_24@BlocketMockDB"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"

@@ -1,0 +1,55 @@
+name: dockercompose16185742458955427556
+services:
+  db:
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: _24@BlocketMockDB
+    image: mcr.microsoft.com/mssql/server
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 1433
+        published: "1433"
+        protocol: tcp
+  fsu600-lab3-api:
+    build:
+      context: C:\Users\R\source\repos\FSU600-LAB4
+      dockerfile: FSU600-LAB3-API/Dockerfile
+    depends_on:
+      db:
+        condition: service_started
+        required: true
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: https://+:443;http://+:80
+    image: fsu600lab3api
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 80
+        protocol: tcp
+      - mode: ingress
+        target: 80
+        published: "8080"
+        protocol: tcp
+      - mode: ingress
+        target: 443
+        protocol: tcp
+    volumes:
+      - type: bind
+        source: C:\Users\R\AppData\Roaming/Microsoft/UserSecrets
+        target: /root/.microsoft/usersecrets
+        read_only: true
+        bind:
+          create_host_path: true
+      - type: bind
+        source: C:\Users\R\AppData\Roaming/ASP.NET/Https
+        target: /root/.aspnet/https
+        read_only: true
+        bind:
+          create_host_path: true
+networks:
+  default:
+    name: dockercompose16185742458955427556_default

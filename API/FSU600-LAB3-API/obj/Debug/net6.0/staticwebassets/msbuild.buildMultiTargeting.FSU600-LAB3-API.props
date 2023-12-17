@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\FSU600-LAB3-API.props" />
+</Project>
